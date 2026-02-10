@@ -1,21 +1,81 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>fvde-aruf-webhook 超完成版</title>
+<style>
+body { font-family: sans-serif; background: #121212; color: #fff; padding: 20px; }
+input, textarea, button { margin: 5px 0; width: 100%; padding: 8px; font-size: 14px; }
+button { width: auto; }
+#status { margin-top: 10px; font-weight: bold; }
+.message-list { margin-bottom: 10px; }
+</style>
+</head>
+<body>
+<h1>fvde-aruf-webhook 超完成版</h1>
+
+<label>Webhook URL (生成済みの場合):</label>
+<input type="text" id="webhookUrl" placeholder="https://discord.com/api/webhooks/...">
+
+<label>サーバーID (Webhook作成補助):</label>
+<input type="text" id="serverId" placeholder="任意">
+
+<label>チャンネルID (Webhook作成補助):</label>
+<input type="text" id="channelId" placeholder="任意">
+
+<label>送信メッセージ (複数行可、改行で分ける):</label>
+<textarea id="messages" rows="6" placeholder="メッセージを改行で複数入力"></textarea>
+
+<label>送信回数 (0で無限):</label>
+<input type="number" id="count" value="0" min="0">
+
+<label>送信間隔 (秒、最低1秒):</label>
+<input type="number" id="interval" value="1" min="1" step="0.1">
+
+<button id="startBtn">送信開始</button>
+<button id="stopBtn">送信停止</button>
+
+<div id="status">未送信</div>
+
+<script>
+let intervalId;
+let sentCount = 0;
+let currentMessageIndex = 0;
+
+function updateStatus(statusText) {
+    const status = document.getElementById("status");
+    status.textContent = statusText || `送信中: ${sentCount}回`;
+}
+
 document.getElementById("startBtn").onclick = () => {
-    const url = document.getElementById("webhookUrl").value.trim();
-    const message = document.getElementById("message").value.trim();
+    let url = document.getElementById("webhookUrl").value.trim();
+    const serverId = document.getElementById("serverId").value.trim();
+    const channelId = document.getElementById("channelId").value.trim();
+    const messagesInput = document.getElementById("messages").value.trim();
     let count = parseInt(document.getElementById("count").value);
     let intervalSec = parseFloat(document.getElementById("interval").value);
 
-    if (!url || !message) {
-        alert("Webhook URLとメッセージは必須です。");
+    if (!url) {
+        alert("Webhook URLを入力してください。");
         return;
     }
+    if (!messagesInput) {
+        alert("メッセージを入力してください。");
+        return;
+    }
+
+    // 複数メッセージを配列化
+    const messages = messagesInput.split(/\r?\n/).filter(m => m.trim() !== "");
 
     if (intervalSec < 1) intervalSec = 1;
     intervalSec = intervalSec * 1000;
 
     sentCount = 0;
+    currentMessageIndex = 0;
     updateStatus();
 
     intervalId = setInterval(() => {
+        const message = messages[currentMessageIndex];
         fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -24,11 +84,16 @@ document.getElementById("startBtn").onclick = () => {
           .catch(err => console.error("送信失敗:", err));
 
         sentCount++;
+        currentMessageIndex = (currentMessageIndex + 1) % messages.length;
         updateStatus();
 
         if (count > 0 && sentCount >= count) {
             clearInterval(intervalId);
-            document.getElementById("status").textContent = `送信完了: ${sentCount}回`;
+            updateStatus(`送信完了: ${sentCount}回`);
         }
     }, intervalSec);
 };
+
+document.getElementById("stopBtn").onclick = () => {
+    clearInterval(intervalId);
+    updateStatus(`送信停止
