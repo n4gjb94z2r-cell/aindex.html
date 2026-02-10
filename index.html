@@ -2,13 +2,55 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>fvde-aruf-webhook 超完成版</title>
+<title>fvde-aruf-webhook 超完成版 (スマホ対応)</title>
 <style>
-body { font-family: sans-serif; background: #121212; color: #fff; padding: 20px; }
-input, textarea, button { margin: 5px 0; width: 100%; padding: 8px; font-size: 14px; }
-button { width: auto; }
-#status { margin-top: 10px; font-weight: bold; }
-.message-list { margin-bottom: 10px; }
+body {
+    font-family: sans-serif;
+    background: #121212;
+    color: #fff;
+    padding: 15px;
+    margin: 0;
+}
+
+h1 { font-size: 24px; text-align: center; }
+
+input, textarea, button {
+    margin: 5px 0;
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 6px;
+    border: none;
+    box-sizing: border-box;
+}
+
+button {
+    width: 48%;
+    margin-right: 2%;
+    margin-top: 10px;
+    cursor: pointer;
+    background-color: #1e90ff;
+    color: white;
+    font-weight: bold;
+}
+
+button:last-child {
+    margin-right: 0;
+    background-color: #ff4c4c;
+}
+
+#status {
+    margin-top: 15px;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+@media screen and (max-width: 480px) {
+    button {
+        width: 100%;
+        margin-right: 0;
+    }
+}
 </style>
 </head>
 <body>
@@ -67,7 +109,7 @@ document.getElementById("startBtn").onclick = () => {
     // 複数メッセージを配列化
     const messages = messagesInput.split(/\r?\n/).filter(m => m.trim() !== "");
 
-    if (intervalSec < 1) intervalSec = 1;
+    if (intervalSec < 1) intervalSec = 1; // Discord制限回避
     intervalSec = intervalSec * 1000;
 
     sentCount = 0;
@@ -96,4 +138,8 @@ document.getElementById("startBtn").onclick = () => {
 
 document.getElementById("stopBtn").onclick = () => {
     clearInterval(intervalId);
-    updateStatus(`送信停止
+    updateStatus(`送信停止: ${sentCount}回`);
+};
+</script>
+</body>
+</html>
